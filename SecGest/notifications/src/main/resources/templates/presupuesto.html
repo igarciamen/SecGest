@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Presupuesto de tu encargo</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 24px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="480" cellpadding="0" cellspacing="0"
+               style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+          <tr>
+            <td style="background-color: #007b5e; padding: 20px 24px;">
+              <span style="color: #ffffff; font-size: 22px; font-weight: bold;">SecreGest</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 24px;">
+              <p style="font-size: 16px; color: #333;">
+                Hola <span th:text="${nombreCliente}">cliente</span>,
+              </p>
+              <p style="font-size: 15px; color: #444;">
+                Hemos revisado tu encargo y ya tenemos un presupuesto listo:
+              </p>
+
+              <table role="presentation" width="100%" cellpadding="8" cellspacing="0"
+                     style="background-color: #f9f9f9; border-radius: 6px; margin: 16px 0;">
+                <tr>
+                  <td style="color: #777; font-size: 13px;">Encargo</td>
+                  <td style="color: #222; font-size: 14px; font-weight: bold; text-align: right;"
+                      th:text="${tituloTarea}">Titulo</td>
+                </tr>
+                <tr>
+                  <td style="color: #777; font-size: 13px;">Categoria</td>
+                  <td style="color: #222; font-size: 14px; text-align: right;"
+                      th:text="${nombreCategoria}">Categoria</td>
+                </tr>
+                <tr>
+                  <td style="color: #777; font-size: 13px;">Presupuesto</td>
+                  <td style="color: #007b5e; font-size: 18px; font-weight: bold; text-align: right;"
+                      th:text="${precioFormateado}">0,00 &#8364;</td>
+                </tr>
+              </table>
+
+              <p style="font-size: 14px; color: #555;">
+                Entra en la plataforma para aceptar o rechazar este presupuesto.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f4f4f4; padding: 14px 24px;">
+              <span style="font-size: 12px; color: #999;">SecreGest &middot; Agencia de secretariado</span>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

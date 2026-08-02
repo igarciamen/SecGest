@@ -1,0 +1,137 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Mis tareas</h2>
+    <a class="btn btn-success" routerLink="/tasks/new">+ Nueva solicitud</a>
+  </div>
+
+  @if (loading) {
+    <p>Cargando tus tareas...</p>
+  }
+
+  @if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  }
+  @if (successMessage) {
+    <div class="alert alert-success">{{ successMessage }}</div>
+  }
+
+  @if (!loading) {
+    @if (tasks.length === 0) {
+      <p>Todavia no has solicitado ningun encargo.</p>
+    }
+    <div class="list-group">
+@for (task of tasks; track task.id) {
+  <div class="sg-dossier {{ spineClass(task.status) }}">
+    <button
+      class="sg-dossier-header"
+      type="button"
+      data-bs-toggle="collapse"
+      [attr.data-bs-target]="'#dossier-' + task.id"
+      aria-expanded="false"
+    >
+      <div>
+        <p class="sg-dossier-title">{{ task.title }}</p>
+        <div class="sg-dossier-meta">
+          <span>{{ task.categoryName }}</span>
+          <span>·</span>
+          <span>{{ task.createdAt | date:'dd/MM/yyyy' }}</span>
+          @if (task.price) { <span class="price">{{ task.price }} €</span> }
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="sg-status-pill">{{ task.status }}</span>
+        <span class="sg-dossier-chevron">▾</span>
+      </div>
+    </button>
+
+    <div class="collapse" [id]="'dossier-' + task.id">
+      <div class="sg-dossier-body">
+
+        @if (editingId === task.id) {
+          <form [formGroup]="editForm" (ngSubmit)="saveEdit(task)" class="sg-section">
+            <div class="mb-2">
+              <label class="sg-label">Título</label>
+              <input type="text" class="form-control" formControlName="title" />
+            </div>
+            <div class="mb-2">
+              <label class="sg-label">Descripción</label>
+              <textarea class="form-control" formControlName="description" rows="2"></textarea>
+            </div>
+            <button type="submit" class="btn btn-sm btn-success" [disabled]="actionInProgressId === task.id">Guardar</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary ms-1" (click)="cancelEdit()">Cancelar</button>
+          </form>
+        } @else {
+
+          <dl class="sg-facts sg-section">
+            @if (task.description) {
+              <div class="sg-fact" style="grid-column: 1 / -1;">
+                <dt>Descripción</dt>
+                <dd>{{ task.description }}</dd>
+              </div>
+            }
+            @if (task.dueDate) {
+              <div class="sg-fact"><dt>Fecha límite</dt><dd>{{ task.dueDate | date:'dd/MM/yyyy HH:mm' }}</dd></div>
+            }
+            @if (task.contactPhone) {
+              <div class="sg-fact"><dt>Teléfono</dt><dd>{{ task.contactPhone }}</dd></div>
+            }
+            @if (task.confidentialityLevel === 'SENSIBLE') {
+              <div class="sg-fact"><dt>Confidencialidad</dt><dd>⚠️ Sensible</dd></div>
+            }
+            @if (task.priceHistory && task.priceHistory.length > 0) {
+              <div class="sg-fact"><dt>Presupuestos rechazados</dt><dd>{{ task.priceHistory.join(' €, ') }} €</dd></div>
+            }
+            @if (task.rating) {
+              <div class="sg-fact">
+                <dt>Tu valoración</dt>
+                <dd>@for (s of [1,2,3,4,5]; track s) { @if (s <= task.rating) { ⭐ } }</dd>
+              </div>
+            }
+          </dl>
+
+          <div class="sg-section sg-actions">
+            @if (task.status === 'PRESUPUESTADA') {
+              <button class="btn btn-sm btn-success" [disabled]="actionInProgressId === task.id" (click)="accept(task)">Aceptar presupuesto</button>
+              <button class="btn btn-sm btn-outline-danger" [disabled]="actionInProgressId === task.id" (click)="reject(task)">Rechazar</button>
+            }
+            @if (task.status === 'ACEPTADA') {
+              <button class="btn btn-sm btn-success" [disabled]="actionInProgressId === task.id" (click)="pay(task)">Pagar {{ task.price }} € (simulado)</button>
+              <button class="btn btn-sm btn-outline-primary" [disabled]="actionInProgressId === task.id" (click)="payWithRedsys(task)">Pagar con TPV BBVA</button>
+            }
+            @if (task.status === 'PENDIENTE_REVISION') {
+              <button class="btn btn-sm btn-outline-primary" (click)="startEdit(task)">Editar</button>
+            }
+            @if (task.status === 'ENTREGADA' && ratingTaskId !== task.id) {
+              <button class="btn btn-sm btn-success" (click)="startRating(task)">Confirmar recepción</button>
+            }
+          </div>
+
+          @if (task.status === 'ENTREGADA' && ratingTaskId === task.id) {
+            <div class="sg-section sg-tool-panel">
+              <p class="sg-label mb-2">¿Qué tal ha ido? (opcional)</p>
+              @for (s of [1,2,3,4,5]; track s) {
+                <span style="cursor:pointer; font-size:1.3rem" (click)="setRating(s)">{{ s <= selectedRating ? '⭐' : '☆' }}</span>
+              }
+              <textarea class="form-control form-control-sm my-2" rows="2" placeholder="Comentario (opcional)"
+                [(ngModel)]="ratingComment" [ngModelOptions]="{ standalone: true }"></textarea>
+              <button class="btn btn-sm btn-success" [disabled]="actionInProgressId === task.id" (click)="confirmCompletion(task)">Confirmar</button>
+              <button class="btn btn-sm btn-outline-secondary ms-1" (click)="cancelRating()">Cancelar</button>
+            </div>
+          }
+
+          <div class="sg-section">
+            <div class="sg-section-title">Herramientas</div>
+            <div class="sg-tools">
+              <app-task-documents-component [taskId]="task.id"></app-task-documents-component>
+              <app-task-chat-component [taskId]="task.id"></app-task-chat-component>
+            </div>
+          </div>
+
+        }
+      </div>
+    </div>
+  </div>
+}
+    </div>
+  }
+</div>

@@ -1,0 +1,113 @@
+.sg-form-card {
+  background: var(--sg-surface);
+  border: 1px solid var(--sg-line);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: var(--sg-shadow);
+}
+
+.sg-input {
+  width: 100%;
+  border: 1px solid var(--sg-line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  background: var(--sg-paper);
+  color: var(--sg-ink);
+}
+.sg-input:focus {
+  outline: none;
+  border-color: var(--sg-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sg-accent) 20%, transparent);
+}
+.sg-input.is-invalid {
+  border-color: #A84B3F;
+}
+
+.sg-input-color {
+  padding: 4px;
+  height: 40px;
+  cursor: pointer;
+}
+
+.sg-field-error {
+  font-size: 0.76rem;
+  color: #A84B3F;
+  margin-top: 4px;
+}
+
+.sg-btn-primary {
+  background: var(--sg-accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 20px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.sg-btn-primary:disabled { opacity: 0.5; }
+
+.sg-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--sg-line);
+  color: var(--sg-ink);
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.sg-btn-ghost.sm {
+  padding: 5px 10px;
+  font-size: 0.78rem;
+}
+.sg-btn-ghost:hover { border-color: var(--sg-accent); color: var(--sg-accent); }
+.sg-btn-ghost.danger:hover { border-color: #A84B3F; color: #A84B3F; }
+
+.sg-ledger {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sg-ledger-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--sg-surface);
+  border: 1px solid var(--sg-line);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+.sg-ledger-row.inactive {
+  opacity: 0.55;
+}
+
+.sg-ledger-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.sg-ledger-main {
+  flex: 1;
+  min-width: 0;
+}
+.sg-ledger-name {
+  font-family: var(--sg-font-display);
+  font-weight: 600;
+  color: var(--sg-ink);
+}
+.sg-ledger-meta {
+  font-size: 0.78rem;
+  color: var(--sg-muted);
+}
+
+.sg-ledger-actions {
+  display: flex;
+  gap: 6px;
+}

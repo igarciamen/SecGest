@@ -1,0 +1,55 @@
+<div class="container mt-5">
+  <div class="sg-page-header">
+    <h2 class="sg-page-title">Panel de administración</h2>
+    <p class="sg-page-subtitle">Un vistazo rápido al estado del negocio.</p>
+  </div>
+
+  @if (loading) {
+    <p>Cargando métricas...</p>
+  }
+  @if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  }
+
+  @if (metrics) {
+    <div class="sg-metric-grid">
+      <div class="sg-metric-card">
+        <div class="sg-metric-label">Tareas totales</div>
+        <div class="sg-metric-value">{{ totalTasks }}</div>
+      </div>
+      <div class="sg-metric-card accent-gold">
+        <div class="sg-metric-label">Ingresos cobrados</div>
+        <div class="sg-metric-value">{{ metrics.totalRevenue }} €</div>
+      </div>
+      <div class="sg-metric-card accent-warn">
+        <div class="sg-metric-label">Vencen en 7 días</div>
+        <div class="sg-metric-value">{{ metrics.upcomingDueCount }}</div>
+      </div>
+      <div class="sg-metric-card accent-accent">
+        <div class="sg-metric-label">Valoración media</div>
+        <div class="sg-metric-value">
+          @if (metrics.averageRating) {
+            {{ metrics.averageRating }} ⭐
+          } @else {
+            <span class="sg-muted-text">Sin valoraciones</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="sg-section-title mt-5 mb-2">Tareas por estado</div>
+    <div class="sg-status-breakdown">
+      @for (status of statusOrder; track status) {
+        @if (countFor(status) > 0) {
+          <div class="sg-status-bar-row">
+            <span class="sg-status-bar-label">{{ status }}</span>
+            <div class="sg-status-bar-track">
+              <div class="sg-status-bar-fill" [style.width.%]="(countFor(status) / totalTasks) * 100"></div>
+            </div>
+            <span class="sg-status-bar-count">{{ countFor(status) }}</span>
+          </div>
+        }
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,43 @@
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="sg-page-title text-capitalize mb-0">{{ currentMonth$label }}</h2>
+    <div class="d-flex gap-2">
+      <button class="sg-btn-ghost sm" (click)="previousMonth()">‹ Anterior</button>
+      <button class="sg-btn-ghost sm" (click)="nextMonth()">Siguiente ›</button>
+    </div>
+  </div>
+
+  @if (loading) {
+    <p>Cargando calendario...</p>
+  }
+  @if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  }
+
+  @if (!loading && !errorMessage) {
+    <div class="cal-grid">
+      @for (label of weekDayLabels; track label) {
+        <div class="cal-weekday">{{ label }}</div>
+      }
+
+      @for (day of days; track day.date.getTime()) {
+        <div class="cal-day" [class.muted]="!day.inCurrentMonth" [class.today]="day.isToday">
+          <div class="cal-day-number">{{ day.date.getDate() }}</div>
+
+          @for (task of day.tasks; track task.id) {
+            <div [ngClass]="taskUrgencyClass(task)" [title]="task.title + ' — ' + task.status">
+              {{ task.title }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="cal-legend">
+      <span><i class="dot overdue"></i>Vencida sin cerrar</span>
+      <span><i class="dot soon"></i>Vence en menos de 3 días</span>
+      <span><i class="dot done"></i>Completada o rechazada</span>
+      <span><i class="dot neutral"></i>Resto</span>
+    </div>
+  }
+</div>

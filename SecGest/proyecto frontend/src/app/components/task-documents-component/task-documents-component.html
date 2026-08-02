@@ -1,0 +1,50 @@
+<div class="mt-2">
+  <button type="button" class="sg-tool-trigger tool-documents" (click)="toggle()">
+    <span>📎 Adjuntos @if (documents.length > 0) { <span class="sg-tool-badge">{{ documents.length }}</span> }</span>
+    <span>{{ expanded ? '▲' : '▼' }}</span>
+  </button>
+
+  @if (expanded) {
+    <div class="sg-tool-panel tool-documents">
+      @if (loading) {
+        <p class="small text-muted mb-1">Cargando adjuntos...</p>
+      }
+      @if (errorMessage) {
+        <div class="alert alert-danger py-1 small">{{ errorMessage }}</div>
+      }
+
+      @if (documents.length > 0) {
+        <div class="sg-file-list">
+          @for (doc of documents; track doc.id) {
+            <div class="sg-file-row">
+              <span class="sg-file-icon">{{ doc.originalFilename.split('.').pop()?.slice(0,3) }}</span>
+              <div class="sg-file-info">
+                <div class="sg-file-name">{{ doc.originalFilename }}</div>
+                <div class="sg-file-meta">
+                  {{ formatSize(doc.sizeBytes) }} · {{ doc.uploaderRole === 'ROLE_ADMIN' ? 'la agencia' : 'el cliente' }}
+                </div>
+              </div>
+              <div class="sg-file-actions">
+                <button type="button" class="sg-icon-btn" title="Descargar" (click)="download(doc)">⬇</button>
+                @if (canDelete(doc)) {
+                  <button type="button" class="sg-icon-btn danger" title="Eliminar" [disabled]="deletingId === doc.id" (click)="delete(doc)">✕</button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="small text-muted mb-2">Todavía no hay ningún documento en esta tarea.</p>
+      }
+
+      <label class="sg-upload-zone">
+        <input type="file" (change)="onFileSelected($event)" [disabled]="uploading" hidden />
+        @if (!uploading) {
+          <span>⬆ Arrastra un archivo aquí o haz clic para subirlo</span>
+        } @else {
+          <span>Subiendo...</span>
+        }
+      </label>
+    </div>
+  }
+</div>

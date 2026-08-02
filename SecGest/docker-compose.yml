@@ -1,0 +1,125 @@
+services:
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: usersSecGest
+      POSTGRES_USER: postgres
+      # Antes iba en claro; ahora coincide siempre con DB_PASSWORD del .env,
+      # para que nunca se desincronice con lo que usan los microservicios.
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - secregest_db_data:/var/lib/postgresql/data
+      # Solo se ejecuta la primera vez (volumen vacio): crea ademas tasksSecGest y categoriesSecGest.
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    ports:
+      - "5437:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  users:
+    build: ./users
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/usersSecGest
+      JWT_SECRET: ${JWT_SECRET}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+  categories:
+    build: ./categories
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/categoriesSecGest
+      JWT_SECRET: ${JWT_SECRET}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+  notifications:
+    build: ./notifications
+    ports:
+      - "8084:8084"
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD}
+
+  tasks:
+    build: ./tasks
+    depends_on:
+      db:
+        condition: service_healthy
+      categories:
+        condition: service_started
+      users:
+        condition: service_started
+      notifications:
+        condition: service_started
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/tasksSecGest
+      # Sobreescriben las *.base-url fijas en localhost de application.properties,
+      # para que dentro de la red de Docker cada microservicio se encuentre por su
+      # nombre de servicio en vez de por localhost.
+      CATEGORIES_BASE_URL: http://categories:8083/api/categories
+      USERS_BASE_URL: http://users:8081/api/user
+      NOTIFICATIONS_BASE_URL: http://notifications:8084
+      JWT_SECRET: ${JWT_SECRET}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDSYS_SECRET_KEY: ${REDSYS_SECRET_KEY}
+
+  messages:
+    build: ./messages
+    depends_on:
+      db:
+        condition: service_healthy
+      tasks:
+        condition: service_started
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/messagesSecGest
+      TASKS_BASE_URL: http://tasks:8082/api/tasks
+      JWT_SECRET: ${JWT_SECRET}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+  documents:
+    build: ./documents
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/documentsSecGest
+      TASKS_BASE_URL: http://tasks:8082/api/tasks
+      JWT_SECRET: ${JWT_SECRET}
+      DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      # Los ficheros subidos sobreviven a un `docker compose down` / rebuild.
+      - secregest_documents_data:/app/secregest-uploads
+
+  frontend:
+    build: "./proyecto frontend"
+    depends_on:
+      - users
+      - tasks
+      - categories
+      - notifications
+      - documents
+      - messages
+    ports:
+      - "4200:80"
+
+volumes:
+  secregest_db_data:
+  secregest_documents_data:

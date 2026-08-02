@@ -1,0 +1,95 @@
+<div class="container mt-5" style="max-width: 800px">
+  <div class="sg-page-header">
+    <h2 class="sg-page-title">Gestionar categorías</h2>
+    <p class="sg-page-subtitle">Da de alta los tipos de encargo que ofrece la agencia.</p>
+  </div>
+
+  <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="sg-form-card mb-5">
+    <div class="row">
+      <div class="col-md-8 mb-3">
+        <label class="sg-label mb-1">Nombre</label>
+        <input
+          type="text"
+          class="sg-input"
+          formControlName="name"
+          [class.is-invalid]="name.touched && name.invalid"
+        />
+        @if (name.touched && name.invalid) {
+          <div class="sg-field-error">El nombre es obligatorio (máximo 80 caracteres).</div>
+        }
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="sg-label mb-1">Color</label>
+        <input type="color" class="sg-input sg-input-color" formControlName="colorHex" />
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="sg-label mb-1">Descripción</label>
+      <textarea class="sg-input" formControlName="description" rows="2"></textarea>
+    </div>
+
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label class="sg-label mb-1">Icono (emoji)</label>
+        <input type="text" class="sg-input" formControlName="icon" placeholder="ej. 📞 🗓️ ✍️" />
+      </div>
+      <div class="mb-3">
+  <label class="sg-label mb-1">URL de imagen (opcional)</label>
+  <input type="url" class="sg-input" formControlName="imageUrl" placeholder="https://..." />
+</div>
+      <div class="col-md-4 mb-3">
+        <label class="sg-label mb-1">Precio orientativo (€)</label>
+        <input type="number" step="0.01" min="0" class="sg-input" formControlName="basePrice" />
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="sg-label mb-1">Duración estimada (min)</label>
+        <input type="number" min="0" class="sg-input" formControlName="estimatedMinutes" />
+      </div>
+    </div>
+
+    @if (errorMessage) {
+      <div class="alert alert-danger">{{ errorMessage }}</div>
+    }
+
+    <button type="submit" class="sg-btn-primary" [disabled]="categoryForm.invalid || loading">
+      {{ editingId ? 'Guardar cambios' : 'Crear categoría' }}
+    </button>
+    @if (editingId) {
+      <button type="button" class="sg-btn-ghost ms-2" (click)="cancelEdit()">
+        Cancelar
+      </button>
+    }
+  </form>
+
+  <div class="sg-section-title mb-2">Categorías existentes</div>
+
+  <div class="sg-ledger">
+    @for (category of categories; track category.id) {
+      <div class="sg-ledger-row" [class.inactive]="!category.active">
+        <span class="sg-ledger-icon" [style.background-color]="(category.colorHex || 'var(--sg-accent)') + '29'">
+          {{ category.icon || '📁' }}
+        </span>
+        <div class="sg-ledger-main">
+          <div class="sg-ledger-name">{{ category.name }}</div>
+          <div class="sg-ledger-meta">
+            {{ category.basePrice ? (category.basePrice + ' €') : 'Sin precio' }}
+            ·
+            {{ category.estimatedMinutes ? (category.estimatedMinutes + ' min') : 'Sin duración' }}
+          </div>
+        </div>
+        @if (category.active) {
+          <span class="sg-status-pill spine-done">Activa</span>
+        } @else {
+          <span class="sg-status-pill spine-neutral">Inactiva</span>
+        }
+        <div class="sg-ledger-actions">
+          <button class="sg-btn-ghost sm" (click)="startEdit(category)">Editar</button>
+          <button class="sg-btn-ghost sm" [class.danger]="category.active" (click)="toggleActive(category)">
+            {{ category.active ? 'Desactivar' : 'Reactivar' }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

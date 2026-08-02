@@ -1,0 +1,39 @@
+# ==========================================================
+# SecreGest — .gitignore raíz del proyecto
+# ==========================================================
+
+# --- Secretos (NUNCA subir esto al repositorio) ---
+.env
+.env.*
+!.env.example
+
+# --- Backend: Maven / Java (users, categories, tasks, notifications, documents, messages) ---
+**/target/
+**/*.class
+**/.mvn/wrapper/maven-wrapper.jar
+
+# --- IDEs ---
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# --- Frontend: Angular / Node ---
+proyecto frontend/node_modules/
+proyecto frontend/dist/
+proyecto frontend/.angular/
+proyecto frontend/npm-debug.log
+proyecto frontend/coverage/
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Ficheros subidos por los usuarios (adjuntos de "documents") ---
+secregest-uploads/
+
+# --- Logs ---
+*.log

@@ -1,0 +1,43 @@
+<div class="container mt-5">
+  <h2 class="sg-page-title">Categorías de encargos</h2>
+  <p class="sg-page-subtitle">Elige el tipo de gestión que necesitas y solicita tu encargo en un momento.</p>
+
+  @if (loading) {
+    <p>Cargando categorías...</p>
+  }
+
+  @if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  }
+
+  @if (!loading && !errorMessage) {
+    @if (categories.length === 0) {
+      <p>Todavía no hay categorías publicadas.</p>
+    }
+
+    <div class="sg-category-grid">
+      @for (category of categories; track category.id) {
+<div class="sg-category-card" [class.has-image]="category.imageUrl" [style.--cat-color]="category.colorHex || 'var(--sg-accent)'">
+  @if (category.imageUrl) {
+    <div class="sg-category-cover" [style.background-image]="'url(' + category.imageUrl + ')'"></div>
+  }
+
+  <div class="sg-category-body">
+    @if (!category.imageUrl) {
+      <div class="sg-category-icon">{{ category.icon || '📁' }}</div>
+    }
+    <h5 class="sg-category-name">{{ category.name }}</h5>
+    <p class="sg-category-desc">{{ category.description }}</p>
+
+    @if (category.basePrice || category.estimatedMinutes) {
+      <div class="sg-category-footer">
+        @if (category.basePrice) { <span class="sg-category-price">Desde {{ category.basePrice }} €</span> }
+        @if (category.estimatedMinutes) { <span class="sg-category-time">~{{ category.estimatedMinutes }} min</span> }
+      </div>
+    }
+  </div>
+</div>
+      }
+    </div>
+  }
+</div>

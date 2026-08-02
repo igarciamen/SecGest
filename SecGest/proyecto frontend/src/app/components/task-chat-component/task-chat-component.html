@@ -1,0 +1,43 @@
+<div class="mt-2">
+  <button type="button" class="sg-tool-trigger tool-chat" (click)="toggle()">
+    <span>💬 Mensajes @if (unreadCount > 0) { <span class="sg-tool-badge">{{ unreadCount }}</span> }</span>
+    <span>{{ expanded ? '▲' : '▼' }}</span>
+  </button>
+
+  @if (expanded) {
+    <div class="sg-tool-panel tool-chat">
+      @if (loading && !thread) {
+        <p class="small text-muted mb-1">Cargando conversación...</p>
+      }
+      @if (errorMessage) {
+        <div class="alert alert-danger py-1 small">{{ errorMessage }}</div>
+      }
+
+      @if (thread) {
+        <div class="sg-chat-scroll">
+          @if (thread.messages.length === 0) {
+            <p class="small text-muted mb-0">Todavía no hay mensajes. Escribe el primero.</p>
+          }
+          @for (message of thread.messages; track message.id) {
+            <div class="sg-chat-row" [class.mine]="isMine(message)">
+              <div class="sg-chat-bubble">
+                <div class="sg-chat-text">{{ message.content }}</div>
+                <div class="sg-chat-time">
+                  {{ message.createdAt | date:'dd/MM HH:mm' }}
+                  @if (isMine(message)) {
+                    <button type="button" class="sg-chat-delete" (click)="remove(message)">Borrar</button>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <form class="sg-chat-composer" (ngSubmit)="send()">
+          <input [(ngModel)]="newMessage" name="newMessage" placeholder="Escribe un mensaje..." />
+          <button type="submit" [disabled]="!newMessage.trim()">➤</button>
+        </form>
+      }
+    </div>
+  }
+</div>

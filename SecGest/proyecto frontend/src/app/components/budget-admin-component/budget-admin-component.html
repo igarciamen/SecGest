@@ -1,0 +1,67 @@
+<div class="container mt-5">
+  <div class="sg-page-header">
+    <h2 class="sg-page-title">Tareas por presupuestar</h2>
+    <p class="sg-page-subtitle">Revisa cada solicitud y fija su precio para que el cliente pueda confirmarla.</p>
+  </div>
+
+  @if (loading) {
+    <p>Cargando tareas pendientes...</p>
+  }
+
+  @if (errorMessage) {
+    <div class="alert alert-danger">{{ errorMessage }}</div>
+  }
+  @if (successMessage) {
+    <div class="alert alert-success">{{ successMessage }}</div>
+  }
+
+  @if (!loading) {
+    @if (tasks.length === 0) {
+      <p>No hay tareas pendientes de presupuestar.</p>
+    }
+
+    <div class="sg-ledger">
+      @for (task of tasks; track task.id) {
+        <div class="sg-budget-row">
+          <div class="sg-budget-info">
+            <div class="sg-ledger-name">{{ task.title }}</div>
+            <div class="sg-ledger-meta">{{ task.categoryName }}</div>
+            @if (task.description) {
+              <p class="sg-budget-desc">{{ task.description }}</p>
+            }
+            <div class="sg-budget-tags">
+              @if (task.dueDate) {
+                <span class="sg-tag">📅 {{ task.dueDate | date:'dd/MM/yyyy HH:mm' }}</span>
+              }
+              @if (task.confidentialityLevel === 'SENSIBLE') {
+                <span class="sg-tag warn">⚠️ Sensible</span>
+              }
+            </div>
+          </div>
+
+          <div class="sg-budget-form">
+            <div class="sg-price-input">
+              <span>€</span>
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                placeholder="Precio"
+                [(ngModel)]="priceInputs[task.id]"
+                name="price-{{ task.id }}"
+              />
+            </div>
+            <button
+              class="sg-btn-primary"
+              [disabled]="submittingId === task.id"
+              (click)="submitBudget(task)"
+            >
+              @if (submittingId !== task.id) { <span>Presupuestar</span> }
+              @if (submittingId === task.id) { <span>Enviando...</span> }
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

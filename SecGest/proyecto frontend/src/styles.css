@@ -1,0 +1,545 @@
+
+/* You can add global styles to this file, and also import other style files */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* ============================================================
+   SISTEMA DE DISEÑO "EXPEDIENTE" — SecreGest
+   Metáfora: cada tarea es una carpeta de expediente, con su propio
+   lomo de color y una cabecera tipo membrete. Encaja con el propio
+   negocio (agencia de secretariado, papeleo, archivo), en vez de un
+   look genérico de dashboard SaaS.
+
+   IMPORTANTE: vive aquí (global), no en el CSS de un componente,
+   porque Angular encapsula los selectores por componente y estas
+   clases las reutilizan varios componentes distintos (mismo motivo
+   por el que las variables de tema ya viven aquí desde el Bloque 1).
+   ============================================================ */
+
+:root {
+  /* --- Paleta con nombre (tema claro) --- */
+  --sg-ink: #1F4E4E;              /* texto principal, titulares */
+  --sg-accent: #0B7A6B;           /* marca, enlaces, accion primaria */
+  --sg-accent-strong: #086358;
+  --sg-gold: #B8873B;             /* acento calido: precios, urgencia, hitos */
+  --sg-paper: #FAF8F3;            /* fondo general, "papel" */
+  --sg-surface: #FFFFFF;          /* tarjetas/expedientes */
+  --sg-surface-raised: #F1EEE6;   /* zona de lectura/escritura dentro de un panel, en claro casi igual al fondo */
+  --sg-surface-raised: #24413C;   /* mas clara que --sg-surface (#1B302D), para que se note el contraste */
+  --sg-line: rgba(31, 78, 78, 0.14);
+  --sg-muted: #6B7A79;
+
+  /* Alias retrocompatibles (ya usados en app.css/navbar desde el Bloque 1) */
+  --primary: var(--sg-accent);
+  --secondary: var(--sg-muted);
+  --bg-light: var(--sg-surface);
+  --bg-lighter: var(--sg-paper);
+  --text: var(--sg-ink);
+
+  /* Tipografia */
+  --sg-font-display: 'Lora', Georgia, serif;
+  --sg-font-body: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  --sg-radius: 10px;
+  --sg-shadow: 0 1px 2px rgba(31, 78, 78, 0.06), 0 6px 16px rgba(31, 78, 78, 0.06);
+}
+
+[data-theme='dark'] {
+  --sg-ink: #EDECE6;
+  --sg-accent: #3FBFA0;
+  --sg-accent-strong: #63d4b8;
+  --sg-gold: #D8A24C;
+  --sg-paper: #12211F;
+  --sg-surface: #1B302D;
+  --sg-line: rgba(255, 255, 255, 0.10);
+  --sg-muted: #9FB0AE;
+
+  --primary: var(--sg-accent);
+  --secondary: var(--sg-muted);
+  --bg-light: var(--sg-surface);
+  --bg-lighter: var(--sg-paper);
+  --text: var(--sg-ink);
+}
+:root {
+  --sg-chat-panel: #E9F5F2;
+  --sg-chat-bubble-theirs: #D7ECE7;
+  --sg-doc-panel: #F0EDE6;
+  --sg-doc-row: #E6E2D8;
+  --sg-note-panel: #FBF0DA;
+  --sg-note-card: #F5E4BE;
+}
+
+[data-theme='dark'] {
+  --sg-chat-panel: #1E3B36;
+  --sg-chat-bubble-theirs: #2B554C;
+  --sg-doc-panel: #2C2A25;
+  --sg-doc-row: #3A3731;
+  --sg-note-panel: #3A2C10;
+  --sg-note-card: #4E3B14;
+}
+
+/* Accesibilidad: el acento verde del tema oscuro (--sg-accent) es demasiado
+   claro para llevar texto blanco encima con contraste suficiente. Solo en
+   oscuro, la burbuja propia del chat usa texto oscuro en vez de blanco. */
+[data-theme='dark'] .sg-chat-row.mine .sg-chat-bubble,
+[data-theme='dark'] .sg-chat-row.mine .sg-chat-delete {
+  color: #0B1F1B;
+}
+body {
+  font-family: var(--sg-font-body);
+  background: var(--sg-paper);
+  color: var(--sg-ink);
+}
+[data-theme='dark'] body {
+  background: var(--bg-lighter);
+  color: var(--text);
+}
+
+h1, h2, h3, .sg-display {
+  font-family: var(--sg-font-display);
+  letter-spacing: 0.01em;
+}
+
+/* Etiqueta pequeña tipo "ficha de archivo": mayusculas, tracking amplio */
+.sg-label {
+  font-family: var(--sg-font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sg-muted);
+}
+
+/* ============================================================
+   EXPEDIENTE (acordeon de tarea)
+   ============================================================ */
+
+.sg-dossier {
+  --spine: var(--sg-muted);
+  border: 1px solid var(--sg-line);
+  border-left: 5px solid var(--spine);
+  border-radius: var(--sg-radius);
+  background: var(--sg-surface);
+  box-shadow: var(--sg-shadow);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+/* Colores del "lomo" segun estado -- de un vistazo, como carpetas archivadas */
+.sg-dossier.spine-neutral   { --spine: var(--sg-muted); }
+.sg-dossier.spine-progress  { --spine: var(--sg-accent); }
+.sg-dossier.spine-milestone { --spine: var(--sg-gold); }
+.sg-dossier.spine-done      { --spine: #3F9142; }
+.sg-dossier.spine-rejected  { --spine: #A84B3F; }
+
+.sg-dossier-header {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sg-dossier-title {
+  font-family: var(--sg-font-display);
+  font-weight: 600;
+  font-size: 1.08rem;
+  color: var(--sg-ink);
+  margin: 0;
+}
+
+.sg-dossier-meta {
+  font-size: 0.78rem;
+  color: var(--sg-muted);
+  margin-top: 2px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sg-dossier-meta .price {
+  color: var(--sg-gold);
+  font-weight: 600;
+}
+
+.sg-status-pill {
+  font-family: var(--sg-font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--spine) 16%, transparent);
+  color: var(--spine);
+  border: 1px solid color-mix(in srgb, var(--spine) 40%, transparent);
+}
+
+.sg-dossier-chevron {
+  color: var(--sg-muted);
+  transition: transform 0.2s ease;
+}
+.sg-dossier-header[aria-expanded="true"] .sg-dossier-chevron {
+  transform: rotate(180deg);
+}
+
+.sg-dossier-body {
+  padding: 4px 18px 18px;
+  border-top: 1px solid var(--sg-line);
+}
+
+.sg-section {
+  margin-top: 14px;
+}
+.sg-section-title {
+  font-family: var(--sg-font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sg-muted);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sg-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--sg-line);
+}
+
+/* Cuadricula "ficha" para los detalles clave-valor (evita el bloque de texto
+   apelmazado que se ve en la captura) */
+.sg-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px 20px;
+}
+.sg-fact dt {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sg-muted);
+  margin-bottom: 2px;
+}
+.sg-fact dd {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--sg-ink);
+}
+
+.sg-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Fila de "herramientas" (adjuntos / mensajes / notas): mismo tratamiento
+   visual para las tres, diferenciadas solo por un acento de color propio,
+   en vez de tres estilos de boton distintos sin relacion entre si. */
+.sg-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sg-tool-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 1px solid var(--sg-line);
+  background: var(--sg-paper);
+  color: var(--sg-ink);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.sg-tool-trigger:hover { border-color: var(--tool-accent, var(--sg-accent)); }
+.sg-tool-trigger.tool-documents { --tool-accent: var(--sg-ink); }
+.sg-tool-trigger.tool-chat      { --tool-accent: var(--sg-accent); }
+.sg-tool-trigger.tool-notes     { --tool-accent: var(--sg-gold); }
+
+.sg-tool-badge {
+  background: var(--tool-accent, var(--sg-accent));
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  padding: 1px 7px;
+  margin-left: 6px;
+}
+
+.sg-tool-panel {
+  border: 1px solid var(--sg-line);
+  border-left: 3px solid var(--tool-accent, var(--sg-accent));
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 6px;
+  background: var(--sg-surface);
+}
+
+
+
+/* ============================================================
+   SISTEMA DE DISEÑO "EXPEDIENTE" — SecreGest
+   Metáfora: cada tarea es una carpeta de expediente, con su propio
+   lomo de color y una cabecera tipo membrete. Encaja con el propio
+   negocio (agencia de secretariado, papeleo, archivo), en vez de un
+   look genérico de dashboard SaaS.
+
+   IMPORTANTE: vive aquí (global), no en el CSS de un componente,
+   porque Angular encapsula los selectores por componente y estas
+   clases las reutilizan varios componentes distintos (mismo motivo
+   por el que las variables de tema ya viven aquí desde el Bloque 1).
+   ============================================================ */
+
+:root {
+  /* --- Paleta con nombre (tema claro) --- */
+  --sg-ink: #1F4E4E;              /* texto principal, titulares */
+  --sg-accent: #0B7A6B;           /* marca, enlaces, accion primaria */
+  --sg-accent-strong: #086358;
+  --sg-gold: #B8873B;             /* acento calido: precios, urgencia, hitos */
+  --sg-paper: #FAF8F3;            /* fondo general, "papel" */
+  --sg-surface: #FFFFFF;          /* tarjetas/expedientes */
+  --sg-line: rgba(31, 78, 78, 0.14);
+  --sg-muted: #6B7A79;
+
+  /* Alias retrocompatibles (ya usados en app.css/navbar desde el Bloque 1) */
+  --primary: var(--sg-accent);
+  --secondary: var(--sg-muted);
+  --bg-light: var(--sg-surface);
+  --bg-lighter: var(--sg-paper);
+  --text: var(--sg-ink);
+
+  /* Tipografia */
+  --sg-font-display: 'Lora', Georgia, serif;
+  --sg-font-body: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  --sg-radius: 10px;
+  --sg-shadow: 0 1px 2px rgba(31, 78, 78, 0.06), 0 6px 16px rgba(31, 78, 78, 0.06);
+}
+
+[data-theme='dark'] {
+  --sg-ink: #EDECE6;
+  --sg-accent: #3FBFA0;
+  --sg-accent-strong: #63d4b8;
+  --sg-gold: #D8A24C;
+  --sg-paper: #12211F;
+  --sg-surface: #1B302D;
+  --sg-line: rgba(255, 255, 255, 0.10);
+  --sg-muted: #9FB0AE;
+
+  --primary: var(--sg-accent);
+  --secondary: var(--sg-muted);
+  --bg-light: var(--sg-surface);
+  --bg-lighter: var(--sg-paper);
+  --text: var(--sg-ink);
+}
+
+body {
+  font-family: var(--sg-font-body);
+  background: var(--sg-paper);
+  color: var(--sg-ink);
+}
+[data-theme='dark'] body {
+  background: var(--bg-lighter);
+  color: var(--text);
+}
+
+h1, h2, h3, .sg-display {
+  font-family: var(--sg-font-display);
+  letter-spacing: 0.01em;
+}
+
+/* Etiqueta pequeña tipo "ficha de archivo": mayusculas, tracking amplio */
+.sg-label {
+  font-family: var(--sg-font-body);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sg-muted);
+}
+
+/* ============================================================
+   EXPEDIENTE (acordeon de tarea)
+   ============================================================ */
+
+.sg-dossier {
+  --spine: var(--sg-muted);
+  border: 1px solid var(--sg-line);
+  border-left: 5px solid var(--spine);
+  border-radius: var(--sg-radius);
+  background: var(--sg-surface);
+  box-shadow: var(--sg-shadow);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+/* Colores del "lomo" segun estado -- de un vistazo, como carpetas archivadas */
+.sg-dossier.spine-neutral   { --spine: var(--sg-muted); }
+.sg-dossier.spine-progress  { --spine: var(--sg-accent); }
+.sg-dossier.spine-milestone { --spine: var(--sg-gold); }
+.sg-dossier.spine-done      { --spine: #3F9142; }
+.sg-dossier.spine-rejected  { --spine: #A84B3F; }
+
+.sg-dossier-header {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sg-dossier-title {
+  font-family: var(--sg-font-display);
+  font-weight: 600;
+  font-size: 1.08rem;
+  color: var(--sg-ink);
+  margin: 0;
+}
+
+.sg-dossier-meta {
+  font-size: 0.78rem;
+  color: var(--sg-muted);
+  margin-top: 2px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sg-dossier-meta .price {
+  color: var(--sg-gold);
+  font-weight: 600;
+}
+
+.sg-status-pill {
+  font-family: var(--sg-font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--spine) 16%, transparent);
+  color: var(--spine);
+  border: 1px solid color-mix(in srgb, var(--spine) 40%, transparent);
+}
+
+.sg-dossier-chevron {
+  color: var(--sg-muted);
+  transition: transform 0.2s ease;
+}
+.sg-dossier-header[aria-expanded="true"] .sg-dossier-chevron {
+  transform: rotate(180deg);
+}
+
+.sg-dossier-body {
+  padding: 4px 18px 18px;
+  border-top: 1px solid var(--sg-line);
+}
+
+.sg-section {
+  margin-top: 14px;
+}
+.sg-section-title {
+  font-family: var(--sg-font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sg-muted);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sg-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--sg-line);
+}
+
+/* Cuadricula "ficha" para los detalles clave-valor (evita el bloque de texto
+   apelmazado que se ve en la captura) */
+.sg-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px 20px;
+}
+.sg-fact dt {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sg-muted);
+  margin-bottom: 2px;
+}
+.sg-fact dd {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--sg-ink);
+}
+
+.sg-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Fila de "herramientas" (adjuntos / mensajes / notas): mismo tratamiento
+   visual para las tres, diferenciadas solo por un acento de color propio,
+   en vez de tres estilos de boton distintos sin relacion entre si. */
+.sg-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sg-tool-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 1px solid var(--sg-line);
+  background: var(--sg-paper);
+  color: var(--sg-ink);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.sg-tool-trigger:hover { border-color: var(--tool-accent, var(--sg-accent)); }
+.sg-tool-trigger.tool-documents { --tool-accent: var(--sg-ink); }
+.sg-tool-trigger.tool-chat      { --tool-accent: var(--sg-accent); }
+.sg-tool-trigger.tool-notes     { --tool-accent: var(--sg-gold); }
+
+.sg-tool-badge {
+  background: var(--tool-accent, var(--sg-accent));
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  padding: 1px 7px;
+  margin-left: 6px;
+}
+
+.sg-tool-panel {
+  border: 1px solid var(--sg-line);
+  border-left: 3px solid var(--tool-accent, var(--sg-accent));
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 6px;
+  background: var(--sg-surface);
+}

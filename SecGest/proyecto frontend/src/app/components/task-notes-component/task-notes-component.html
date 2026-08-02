@@ -1,0 +1,34 @@
+<div class="mt-2">
+  <button type="button" class="sg-tool-trigger tool-notes" (click)="toggle()">
+    <span>🗒️ Notas internas @if (notes.length > 0) { <span class="sg-tool-badge">{{ notes.length }}</span> }</span>
+    <span>{{ expanded ? '▲' : '▼' }}</span>
+  </button>
+
+  @if (expanded) {
+    <div class="sg-tool-panel tool-notes">
+      @if (errorMessage) {
+        <div class="alert alert-danger py-1 small">{{ errorMessage }}</div>
+      }
+      @if (notes.length === 0) {
+        <p class="small text-muted mb-2">Todavía no hay notas para esta tarea.</p>
+      }
+
+      <div class="sg-note-list">
+        @for (note of notes; track note.id) {
+          <div class="sg-note-card">
+            <div class="sg-note-text">{{ note.content }}</div>
+            <div class="sg-note-time">{{ note.createdAt | date:'dd/MM/yyyy HH:mm' }}</div>
+          </div>
+        }
+      </div>
+
+      <textarea
+        class="sg-note-input"
+        rows="2"
+        placeholder="Escribe una nota privada (el cliente no la ve)..."
+        [(ngModel)]="newNote"
+      ></textarea>
+      <button class="sg-note-save" [disabled]="!newNote.trim() || loading" (click)="addNote()">Guardar nota</button>
+    </div>
+  }
+</div>

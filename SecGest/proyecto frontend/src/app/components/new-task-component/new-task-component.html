@@ -1,0 +1,71 @@
+<div class="container mt-4" style="max-width: 600px">
+  <h2>Solicitar un nuevo encargo</h2>
+
+  <form [formGroup]="taskForm" (ngSubmit)="onSubmit()">
+    <div class="mb-3">
+      <label class="form-label">Categoria</label>
+      <select class="form-select" formControlName="categoryId"
+        [ngClass]="{ 'is-invalid': categoryId.touched && categoryId.invalid }">
+        <option value="" disabled>Selecciona una categoria</option>
+        @for (category of categories; track category.id) {
+          <option [value]="category.id">{{ category.name }}</option>
+        }
+      </select>
+      @if (categoryId.touched && categoryId.invalid) {
+        <div class="invalid-feedback">Debes elegir una categoria.</div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Titulo</label>
+      <input
+        type="text"
+        class="form-control"
+        formControlName="title"
+        [ngClass]="{ 'is-invalid': title.touched && title.invalid }"
+      />
+      @if (title.touched && title.invalid) {
+        <div class="invalid-feedback">El titulo es obligatorio (maximo 120 caracteres).</div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Descripcion</label>
+      <textarea class="form-control" formControlName="description" rows="4"
+        placeholder="Cuentanos con detalle que necesitas..."></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Fecha limite (opcional)</label>
+      <input type="datetime-local" class="form-control" formControlName="dueDate" />
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Telefono de contacto (opcional)</label>
+        <input type="tel" class="form-control" formControlName="contactPhone" />
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Enlace relevante (opcional)</label>
+        <input type="url" class="form-control" formControlName="relevantUrl" placeholder="https://..." />
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Confidencialidad</label>
+      <select class="form-select" formControlName="confidentialityLevel">
+        <option value="NORMAL">Normal</option>
+        <option value="SENSIBLE">Sensible</option>
+      </select>
+    </div>
+
+    @if (errorMessage) {
+      <div class="alert alert-danger">{{ errorMessage }}</div>
+    }
+
+    <button type="submit" class="btn btn-success" [disabled]="taskForm.invalid || loading">
+      @if (!loading) { <span>Enviar solicitud</span> }
+      @if (loading) { <span>Enviando...</span> }
+    </button>
+  </form>
+</div>

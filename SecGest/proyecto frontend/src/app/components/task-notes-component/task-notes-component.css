@@ -1,0 +1,48 @@
+.sg-tool-panel.tool-notes {
+  background: var(--sg-note-panel);
+}
+
+.sg-note-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.sg-note-card {
+  border-left: 3px solid var(--sg-gold);
+  background: var(--sg-note-card);
+  border-radius: 0 6px 6px 0;
+  padding: 6px 10px;
+}
+.sg-note-text {
+  font-size: 0.85rem;
+  color: var(--sg-ink);
+}
+.sg-note-time {
+  font-size: 0.68rem;
+  color: var(--sg-muted);
+  margin-top: 2px;
+}
+
+.sg-note-input {
+  width: 100%;
+  border: 1px solid var(--sg-line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  background: var(--sg-surface);
+  color: var(--sg-ink);
+  margin-bottom: 6px;
+}
+
+.sg-note-save {
+  border: none;
+  background: var(--sg-gold);
+  color: #fff;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.sg-note-save:disabled { opacity: 0.5; }

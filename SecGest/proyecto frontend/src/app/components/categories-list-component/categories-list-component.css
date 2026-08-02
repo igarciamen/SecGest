@@ -1,0 +1,126 @@
+.sg-page-header {
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--sg-line);
+}
+
+.sg-page-title {
+  font-family: var(--sg-font-display);
+  font-weight: 700;
+  font-size: 2.1rem;
+  color: var(--sg-ink);
+  letter-spacing: 0.005em;
+margin-bottom: 14px;
+}
+
+.sg-page-subtitle {
+  font-family: var(--sg-font-display);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--sg-muted);
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+}
+
+.sg-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+
+  gap: 28px;
+}
+.sg-category-card {
+  position: relative;
+  background: var(--sg-surface);
+  border: 1px solid var(--sg-line);
+  border-radius: 14px;
+ padding: 0;
+  overflow: hidden;
+  box-shadow: var(--sg-shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.sg-category-card {
+  position: relative;
+  background: var(--sg-surface);
+  border: 1px solid var(--sg-line);
+  border-radius: 14px;
+  padding: 22px 20px 18px;
+  box-shadow: var(--sg-shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  margin-top: 1rem;
+}
+.sg-category-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(31, 78, 78, 0.10), 0 12px 24px rgba(31, 78, 78, 0.10);
+}
+.sg-category-body {
+  padding: 20px 20px 18px;
+}
+.sg-category-card:not(.has-image) .sg-category-body {
+  padding-top: 22px;
+}
+
+.sg-category-cover {
+  height: 130px;
+  background-size: cover;
+  background-position: center;
+  border-bottom: 1px solid var(--sg-line);
+}
+
+/* Franja superior fina del color propio de la categoria, en vez de un borde
+   grueso de 4px sin mas -- mas discreto y elegante. */
+.sg-category-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  border-radius: 14px 14px 0 0;
+  background: var(--cat-color);
+  
+}
+
+.sg-category-card.has-image::before {
+  display: none;
+}
+.sg-category-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  background: color-mix(in srgb, var(--cat-color) 16%, var(--sg-surface));
+  margin-bottom: 12px;
+}
+
+.sg-category-name {
+  font-family: var(--sg-font-display);
+  font-weight: 600;
+  color: var(--sg-ink);
+  margin-bottom: 6px;
+}
+
+.sg-category-desc {
+  font-size: 0.86rem;
+  color: var(--sg-muted);
+  margin-bottom: 14px;
+  min-height: 2.6em;
+}
+
+.sg-category-footer {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--sg-line);
+  font-size: 0.78rem;
+}
+
+.sg-category-price {
+  font-weight: 700;
+  color: var(--sg-gold);
+}
+
+.sg-category-time {
+  color: var(--sg-muted);
+}
