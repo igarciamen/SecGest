@@ -6,10 +6,14 @@ desde la petición inicial hasta el presupuesto, pago, entrega y valoración
 final, con comunicación, documentación adjunta y seguimiento por calendario
 integrados en el mismo sitio.
 
-Trabajo de Fin de Grado — arquitectura de microservicios con Spring Boot 4.1 /
-Java 21 en el backend, y Angular 20 en el frontend.
+## Demo
 
----
+
+
+https://github.com/user-attachments/assets/ae318abb-3b44-42e5-8bd1-73f7cd6eb0f5
+
+
+
 
 ## Índice
 
