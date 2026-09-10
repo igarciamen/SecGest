@@ -6,27 +6,6 @@ request through budgeting, payment, delivery, and final rating, with
 messaging, document attachments, and calendar tracking all integrated into
 the same platform.
 
-Final Degree Project (TFG) — microservices architecture built with
-Spring Boot 4.1 / Java 21 on the backend, and Angular 20 on the frontend.
-
----
-
-## Table of contents
-
-- [Architecture](#architecture)
-- [Task lifecycle](#task-lifecycle)
-- [Prerequisites](#prerequisites)
-- [Getting started with Docker (recommended)](#getting-started-with-docker-recommended)
-- [Getting started locally, without Docker](#getting-started-locally-without-docker)
-- [Environment variables](#environment-variables)
-- [Folder structure](#folder-structure)
-- [Testing](#testing)
-- [Development blocks](#development-blocks)
-- [Additional documentation](#additional-documentation)
-- [Future work](#future-work)
-
----
-
 ## Architecture
 
 One microservice per domain, each with its own PostgreSQL database,
@@ -109,27 +88,15 @@ calendar tracking based on each task's due date.
    `init-databases.sql`.
 
 2. Create a `.env` file in the project root (next to
-   `docker-compose.yml`) with this content:
+   `docker-compose.yml`) with the information needed:
 
    ```env
-   JWT_SECRET=0123456789ABCDEFGHIJKLMNOPQRSTUV
-   DB_PASSWORD=apertura15
-   GMAIL_APP_PASSWORD=vssu vlen tqqq jqjd
-   REDSYS_SECRET_KEY=sq7HjrUOBfKmC576ILgskD5srU870gJ7
+   JWT_SECRET
+   DB_PASSWORD
+   GMAIL_APP_PASSWORD
+   REDSYS_SECRET_KEY
    ```
-   > **Important:** save it as UTF-8. If you create it with Windows
-   > Notepad and Docker fails to read the variables (they show up as
-   > empty strings in `docker compose config`), regenerate it from
-   > PowerShell instead:
-   > ```powershell
-   > @"
-   > JWT_SECRET=0123456789ABCDEFGHIJKLMNOPQRSTUV
-   > DB_PASSWORD=apertura15
-   > GMAIL_APP_PASSWORD=vssu vlen tqqq jqjd
-   > REDSYS_SECRET_KEY=sq7HjrUOBfKmC576ILgskD5srU870gJ7
-   > "@ | Out-File -FilePath ".env" -Encoding utf8 -NoNewline
-   > ```
-
+  
 3. Check that the variables resolve correctly before starting anything:
    ```bash
    docker compose config
@@ -215,7 +182,6 @@ needed when using Docker Compose, or if you want to override a value.
 ## Folder structure
 
 ```
-PROYECTO SERVICIOS SECRETARIADO/
 ├── docker-compose.yml
 ├── init-databases.sql
 ├── .env                    # real credentials (not versioned)
@@ -278,43 +244,6 @@ In addition, a full visual redesign of the frontend (the "Dossier" design
 system: each task as a file-folder-style accordion, with its own palette
 and identity) applied across the board after Block 11.
 
----
-
-## Additional documentation
-
-Each block has its own Word document with the step-by-step guide, the
-full code, and the real issues resolved during development (useful as a
-process record for the TFG report). The documents most relevant to
-understanding the final state of the system:
-
-- Guide for each block (`Bloque_1_SecreGest.docx` … `Bloque_13_SecreGest.docx`)
-- `Rediseno_Visual_SecreGest.docx` — the frontend design system
-- `TPV_Redsys_Camino_a_Produccion.docx` — what it would take to make the TPV payment fully real
-
----
-
-## Future work
-
-Reasonable lines of continuation, not implemented as they fall outside
-the scope of a TFG:
-
-- **Real production TPV**: contract with BBVA, strong customer
-  authentication (SCA/3D Secure, mandatory under PSD2 regulation),
-  notification idempotency, refunds. See
-  `TPV_Redsys_Camino_a_Produccion.docx`.
-- **Document storage in a dedicated service** (MinIO/S3) instead of the
-  local filesystem, for deployments running more than one instance of
-  the `documents` microservice.
-- **Distributed rate limiting** (Redis) if the system were ever deployed
-  with multiple `users` instances in parallel.
-- **A secrets manager** (Vault, AWS Secrets Manager) instead of plain
-  environment variables, should the project scale to a production
-  environment with multiple people responsible for deployment.
-- **Push notifications / WebSockets** for the chat, instead of the
-  current *polling* approach (refreshing every 5 seconds), for a truly
-  real-time experience.
-
----
 
 ## Tech stack
 
