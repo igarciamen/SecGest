@@ -18,10 +18,10 @@ a shared secret key.
 | `users` | 8081 | Registration, login, JWT, roles (`ROLE_USER`/`ROLE_ADMIN`) | `usersSecGest` |
 | `categories` | 8083 | Task categories (name, icon, image, indicative price) | `categoriesSecGest` |
 | `tasks` | 8082 | The core: full task lifecycle, budgeting, payment (simulated and real TPV via Redsys), delivery, rating, calendar, metrics | `tasksSecGest` |
-| `notifications` | 8084 | Email sending (Gmail SMTP + Thymeleaf) | — (no database) |
+| `notifications` | 8084 | Email sending (Gmail SMTP + Thymeleaf) | (no database) |
 | `documents` | 8085 | Task attachments (metadata in the DB, files on disk) | `documentsSecGest` |
 | `messages` | 8086 | Client-admin chat per task, and admin-only private notes | `messagesSecGest` |
-| `frontend` | 4200 | Angular 20, standalone components, Bootstrap + a custom design system | — |
+| `frontend` | 4200 | Angular 20, standalone components, Bootstrap + a custom design system | |
 
 Each backend microservice generally follows this internal structure:
 
@@ -239,10 +239,6 @@ with its own tests and a documented guide in Word:
 11. Internal messaging (chat) and admin private notes
 12. Admin dashboard and metrics
 13. Advanced security (configurable CORS, rate limiting, credentials out of the codebase) and deployment
-
-In addition, a full visual redesign of the frontend (the "Dossier" design
-system: each task as a file-folder-style accordion, with its own palette
-and identity) applied across the board after Block 11.
 
 
 ## Tech stack
