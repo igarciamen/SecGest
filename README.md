@@ -1,118 +1,115 @@
 # SecreGest
 
-Plataforma de gestión de encargos para una agencia de secretariado. Un único
-administrador (la agencia) gestiona los encargos que solicitan sus clientes:
-desde la petición inicial hasta el presupuesto, pago, entrega y valoración
-final, con comunicación, documentación adjunta y seguimiento por calendario
-integrados en el mismo sitio.
+A task-management platform for a secretarial agency. A single administrator
+(the agency) manages the tasks requested by its clients: from the initial
+request through budgeting, payment, delivery, and final rating, with
+messaging, document attachments, and calendar tracking all integrated into
+the same platform.
 
-## Demo
-
-
-
-https://github.com/user-attachments/assets/ae318abb-3b44-42e5-8bd1-73f7cd6eb0f5
-
-
-
-
-## Índice
-
-- [Arquitectura](#arquitectura)
-- [Ciclo de vida de una tarea](#ciclo-de-vida-de-una-tarea)
-- [Requisitos previos](#requisitos-previos)
-- [Puesta en marcha con Docker (recomendado)](#puesta-en-marcha-con-docker-recomendado)
-- [Puesta en marcha en local, sin Docker](#puesta-en-marcha-en-local-sin-docker)
-- [Variables de entorno](#variables-de-entorno)
-- [Estructura de carpetas](#estructura-de-carpetas)
-- [Testing](#testing)
-- [Bloques de desarrollo](#bloques-de-desarrollo)
-- [Documentación adicional](#documentación-adicional)
-- [Trabajo futuro](#trabajo-futuro)
+Final Degree Project (TFG) — microservices architecture built with
+Spring Boot 4.1 / Java 21 on the backend, and Angular 20 on the frontend.
 
 ---
 
-## Arquitectura
+## Table of contents
 
-Un microservicio por dominio, cada uno con su propia base de datos
-PostgreSQL, comunicados entre sí por RestTemplate (con un interceptor que
-reenvía el token JWT del usuario original) y protegidos con JWT firmado con
-una clave compartida.
+- [Architecture](#architecture)
+- [Task lifecycle](#task-lifecycle)
+- [Prerequisites](#prerequisites)
+- [Getting started with Docker (recommended)](#getting-started-with-docker-recommended)
+- [Getting started locally, without Docker](#getting-started-locally-without-docker)
+- [Environment variables](#environment-variables)
+- [Folder structure](#folder-structure)
+- [Testing](#testing)
+- [Development blocks](#development-blocks)
+- [Additional documentation](#additional-documentation)
+- [Future work](#future-work)
 
-| Servicio | Puerto | Responsabilidad | Base de datos |
+---
+
+## Architecture
+
+One microservice per domain, each with its own PostgreSQL database,
+communicating with each other via RestTemplate (with an interceptor that
+forwards the original user's JWT token) and secured with a JWT signed with
+a shared secret key.
+
+| Service | Port | Responsibility | Database |
 |---|---|---|---|
-| `users` | 8081 | Registro, login, JWT, roles (`ROLE_USER`/`ROLE_ADMIN`) | `usersSecGest` |
-| `categories` | 8083 | Categorías de encargos (nombre, icono, imagen, precio orientativo) | `categoriesSecGest` |
-| `tasks` | 8082 | El núcleo: ciclo de vida completo de la tarea, presupuesto, pago (simulado y TPV real vía Redsys), entrega, valoración, calendario, métricas | `tasksSecGest` |
-| `notifications` | 8084 | Envío de emails (Gmail SMTP + Thymeleaf) | — (sin base de datos) |
-| `documents` | 8085 | Documentos adjuntos por tarea (metadatos en BBDD, ficheros en disco) | `documentsSecGest` |
-| `messages` | 8086 | Chat cliente-admin por tarea, y notas internas privadas del admin | `messagesSecGest` |
-| `frontend` | 4200 | Angular 20, standalone components, Bootstrap + sistema de diseño propio | — |
+| `users` | 8081 | Registration, login, JWT, roles (`ROLE_USER`/`ROLE_ADMIN`) | `usersSecGest` |
+| `categories` | 8083 | Task categories (name, icon, image, indicative price) | `categoriesSecGest` |
+| `tasks` | 8082 | The core: full task lifecycle, budgeting, payment (simulated and real TPV via Redsys), delivery, rating, calendar, metrics | `tasksSecGest` |
+| `notifications` | 8084 | Email sending (Gmail SMTP + Thymeleaf) | — (no database) |
+| `documents` | 8085 | Task attachments (metadata in the DB, files on disk) | `documentsSecGest` |
+| `messages` | 8086 | Client-admin chat per task, and admin-only private notes | `messagesSecGest` |
+| `frontend` | 4200 | Angular 20, standalone components, Bootstrap + a custom design system | — |
 
-Cada microservicio de backend sigue, en general, esta estructura interna:
+Each backend microservice generally follows this internal structure:
 
 ```
-src/main/java/com/igarciamen/<servicio>/
-  config/       # Seguridad (JWT), CORS, OpenAPI/Swagger, RestTemplate
-  controller/   # Endpoints REST
-  service/      # Lógica de negocio
+src/main/java/com/igarciamen/<service>/
+  config/       # Security (JWT), CORS, OpenAPI/Swagger, RestTemplate
+  controller/   # REST endpoints
+  service/      # Business logic
   repository/   # Spring Data JPA
-  model/        # Entidades JPA
-  payloads/     # DTOs de entrada (request) y salida (response)
+  model/        # JPA entities
+  payloads/     # Request and response DTOs
     request/
     response/
 ```
-(`messages` usa además `dto/` en vez de `payloads/`, y tests de arquitectura
-con ArchUnit que verifican esta misma estructura automáticamente.)
+(`messages` uses `dto/` instead of `payloads/`, plus architecture tests
+with ArchUnit that automatically verify this same structure.)
 
-### Por qué microservicios y no un monolito
+### Why microservices instead of a monolith
 
-Cada dominio (usuarios, categorías, tareas, notificaciones, documentos,
-mensajería) tiene un ciclo de cambio y una responsabilidad claramente
-distintos, y se comunican por contratos HTTP explícitos en vez de
-compartir base de datos — permite desplegar, escalar o sustituir cada pieza
-de forma independiente (por ejemplo, `notifications` podría sustituirse por
-otro proveedor de email sin tocar el resto del sistema).
+Each domain (users, categories, tasks, notifications, documents,
+messaging) has a clearly distinct change cycle and responsibility, and
+they communicate through explicit HTTP contracts rather than sharing a
+database — this allows each piece to be deployed, scaled, or replaced
+independently (for example, `notifications` could be swapped for a
+different email provider without touching the rest of the system).
 
 ---
 
-## Ciclo de vida de una tarea
+## Task lifecycle
 
 ```
-PENDIENTE_REVISION → PRESUPUESTADA → ACEPTADA → PAGADA → ENTREGADA → COMPLETADA
-                           ↑______________|
-                     (rechazo del cliente)
+PENDING_REVIEW → BUDGETED → ACCEPTED → PAID → DELIVERED → COMPLETED
+                       ↑______________|
+                  (client rejection)
 ```
 
-1. El **cliente** solicita un encargo (`POST /api/tasks`).
-2. El **admin** le fija un precio (`PUT /api/tasks/{id}/budget`) → email al cliente.
-3. El **cliente** acepta (`PUT /api/tasks/{id}/accept`) o rechaza (`PUT /api/tasks/{id}/reject`, vuelve a pendiente, con historial del precio rechazado).
-4. El **cliente** paga: simulado (`PUT /api/tasks/{id}/pay`) o con TPV real vía Redsys/BBVA (`POST /api/tasks/{id}/pay/redsys/start`, entorno de pruebas).
-5. El **admin** marca la entrega (`PUT /api/tasks/{id}/deliver`) → email al cliente.
-6. El **cliente** confirma la recepción, con valoración opcional de 1 a 5 (`PUT /api/tasks/{id}/complete`).
+1. The **client** requests a task (`POST /api/tasks`).
+2. The **admin** sets a price (`PUT /api/tasks/{id}/budget`) → email to the client.
+3. The **client** accepts (`PUT /api/tasks/{id}/accept`) or rejects (`PUT /api/tasks/{id}/reject`, back to pending, with the rejected price kept in history).
+4. The **client** pays: simulated (`PUT /api/tasks/{id}/pay`) or via a real TPV through Redsys/BBVA (`POST /api/tasks/{id}/pay/redsys/start`, sandbox environment).
+5. The **admin** marks the task as delivered (`PUT /api/tasks/{id}/deliver`) → email to the client.
+6. The **client** confirms receipt, with an optional 1-to-5 rating (`PUT /api/tasks/{id}/complete`).
 
-En cualquier punto del proceso: chat entre cliente y admin, documentos
-adjuntos, notas internas del admin (no visibles para el cliente), y
-seguimiento por calendario según la fecha límite de cada tarea.
-
----
-
-## Requisitos previos
-
-- **Docker** y **Docker Compose** (opción recomendada), o bien:
-- **Java 21** y **Maven** (para ejecutar cada microservicio individualmente)
-- **Node.js** y **Angular CLI** (para el frontend)
-- **PostgreSQL 16** en local, si no usas Docker
+At any point in the process: chat between client and admin, document
+attachments, admin-only private notes (never visible to the client), and
+calendar tracking based on each task's due date.
 
 ---
 
-## Puesta en marcha con Docker (recomendado)
+## Prerequisites
 
-1. Clona o descarga el proyecto completo, con las 8 carpetas (`users`,
+- **Docker** and **Docker Compose** (recommended option), or:
+- **Java 21** and **Maven** (to run each microservice individually)
+- **Node.js** and **Angular CLI** (for the frontend)
+- **PostgreSQL 16** locally, if not using Docker
+
+---
+
+## Getting started with Docker (recommended)
+
+1. Clone or download the full project, with all 8 folders (`users`,
    `categories`, `tasks`, `notifications`, `documents`, `messages`,
-   `proyecto frontend`) junto a `docker-compose.yml` e `init-databases.sql`.
+   `proyecto frontend`) alongside `docker-compose.yml` and
+   `init-databases.sql`.
 
-2. Crea un archivo `.env` en la raíz del proyecto (junto a
-   `docker-compose.yml`) con este contenido:
+2. Create a `.env` file in the project root (next to
+   `docker-compose.yml`) with this content:
 
    ```env
    JWT_SECRET=0123456789ABCDEFGHIJKLMNOPQRSTUV
@@ -120,9 +117,10 @@ seguimiento por calendario según la fecha límite de cada tarea.
    GMAIL_APP_PASSWORD=vssu vlen tqqq jqjd
    REDSYS_SECRET_KEY=sq7HjrUOBfKmC576ILgskD5srU870gJ7
    ```
-   > **Importante:** guárdalo en codificación UTF-8. Si lo creas con el
-   > Bloc de notas de Windows y Docker no lee las variables (aparecen como
-   > cadena vacía en `docker compose config`), regenéralo desde PowerShell:
+   > **Important:** save it as UTF-8. If you create it with Windows
+   > Notepad and Docker fails to read the variables (they show up as
+   > empty strings in `docker compose config`), regenerate it from
+   > PowerShell instead:
    > ```powershell
    > @"
    > JWT_SECRET=0123456789ABCDEFGHIJKLMNOPQRSTUV
@@ -132,101 +130,102 @@ seguimiento por calendario según la fecha límite de cada tarea.
    > "@ | Out-File -FilePath ".env" -Encoding utf8 -NoNewline
    > ```
 
-3. Verifica que las variables se resuelven bien antes de arrancar nada:
+3. Check that the variables resolve correctly before starting anything:
    ```bash
    docker compose config
    ```
-   No debería aparecer ninguna variable como cadena vacía (`""`) ni avisos
-   de `"is not set"`.
+   No variable should show up empty (`""`), and there should be no
+   `"is not set"` warnings.
 
-4. Levanta todo:
+4. Bring everything up:
    ```bash
    docker compose up --build
    ```
-   La primera vez tarda varios minutos (construye 6 imágenes de Java desde
-   cero). `init-databases.sql` se ejecuta solo la primera vez que se crea el
-   volumen de la base de datos, y crea las bases adicionales
+   The first run takes a few minutes (it builds 6 Java images from
+   scratch). `init-databases.sql` only runs the first time the database
+   volume is created, and creates the additional databases
    (`tasksSecGest`, `categoriesSecGest`, `documentsSecGest`,
-   `messagesSecGest`) además de la `usersSecGest` que crea Postgres por
-   defecto.
+   `messagesSecGest`) on top of the `usersSecGest` that Postgres creates
+   by default.
 
-5. Accede a `http://localhost:4200`.
+5. Open `http://localhost:4200`.
 
-Para reiniciar desde cero (por ejemplo, tras cambiar una contraseña de base
-de datos en el `.env`):
+To fully reset everything (for example, after changing a database
+password in `.env`):
 ```bash
 docker compose down -v
 docker compose up --build
 ```
-El `-v` borra también los volúmenes — imprescindible si cambiaste
-`DB_PASSWORD`, porque Postgres solo fija la contraseña la primera vez que
-se crea el volumen.
+The `-v` flag also removes the volumes — required if you changed
+`DB_PASSWORD`, since Postgres only sets the password the first time the
+volume is created.
 
 ---
 
-## Puesta en marcha en local, sin Docker
+## Getting started locally, without Docker
 
-1. Crea en tu Postgres local las 5 bases de datos: `usersSecGest`,
+1. Create these 5 databases in your local Postgres: `usersSecGest`,
    `categoriesSecGest`, `tasksSecGest`, `documentsSecGest`,
-   `messagesSecGest` (`notifications` no necesita base de datos).
+   `messagesSecGest` (`notifications` doesn't need a database).
 
-2. En cada microservicio, revisa `src/main/resources/application.properties`
-   y ajusta usuario/contraseña de tu Postgres local si difieren de los
-   valores por defecto.
+2. In each microservice, check `src/main/resources/application.properties`
+   and adjust your local Postgres username/password if they differ from
+   the defaults.
 
-3. Arranca los backends **en este orden** (algunos dependen de otros para
-   validar tokens o consultar datos):
+3. Start the backends **in this order** (some depend on others to
+   validate tokens or look up data):
    ```
    users (8081) → categories (8083) → notifications (8084) → tasks (8082) → documents (8085) → messages (8086)
    ```
-   Desde cada carpeta: `mvn spring-boot:run`, o ejecuta la clase
-   `*Application.java` desde tu IDE.
+   From each folder: `mvn spring-boot:run`, or run the
+   `*Application.java` class from your IDE.
 
-4. Arranca el frontend:
+4. Start the frontend:
    ```bash
    cd "proyecto frontend"
    npm install
    ng serve
    ```
-   Accede a `http://localhost:4200`.
+   Open `http://localhost:4200`.
 
-5. Cada backend expone su documentación interactiva en
-   `http://localhost:<puerto>/swagger-ui/index.html`.
+5. Each backend exposes interactive API documentation at
+   `http://localhost:<port>/swagger-ui/index.html`.
 
 ---
 
-## Variables de entorno
+## Environment variables
 
-| Variable | Usada por | Descripción |
+| Variable | Used by | Description |
 |---|---|---|
-| `JWT_SECRET` | Los 6 microservicios de backend | Clave compartida para firmar/validar los JWT |
-| `DB_PASSWORD` | Los 5 microservicios con base de datos, y `db` | Contraseña de PostgreSQL |
-| `GMAIL_APP_PASSWORD` | `notifications` | Contraseña de aplicación de Gmail (SMTP) |
-| `REDSYS_SECRET_KEY` | `tasks` | Clave del comercio de pruebas de Redsys (TPV) |
+| `JWT_SECRET` | All 6 backend microservices | Shared key used to sign/validate JWTs |
+| `DB_PASSWORD` | The 5 microservices with a database, and `db` | PostgreSQL password |
+| `GMAIL_APP_PASSWORD` | `notifications` | Gmail app password (SMTP) |
+| `REDSYS_SECRET_KEY` | `tasks` | Redsys sandbox merchant secret key (TPV) |
 
-En local, cada `application.properties` tiene un valor por defecto
-(`${JWT_SECRET:0123456789ABCDEFGHIJKLMNOPQRSTUV}`), así que **no es
-obligatorio** definir estas variables para desarrollar — solo hace falta el
-`.env` si usas Docker Compose, o si quieres sobrescribir algún valor.
+Locally, each `application.properties` has a default value
+(`${JWT_SECRET:0123456789ABCDEFGHIJKLMNOPQRSTUV}`), so defining these
+variables **is not required** for development — the `.env` file is only
+needed when using Docker Compose, or if you want to override a value.
 
-`.env` **nunca** se sube al repositorio (está en `.gitignore`).
+`.env` is **never** committed to the repository (it's listed in
+`.gitignore`).
 
 ---
 
-## Estructura de carpetas
+## Folder structure
 
 ```
 PROYECTO SERVICIOS SECRETARIADO/
 ├── docker-compose.yml
 ├── init-databases.sql
-├── .env                    # credenciales reales (no versionado)
+├── .env                    # real credentials (not versioned)
 ├── .gitignore
-├── users/                  # microservicio: autenticación y usuarios
-├── categories/              # microservicio: categorías de encargos
-├── tasks/                  # microservicio: núcleo del negocio
-├── notifications/           # microservicio: envío de emails
-├── documents/                # microservicio: documentos adjuntos
-├── messages/                # microservicio: chat y notas internas
+├── users/                  # microservice: authentication and users
+├── categories/              # microservice: task categories
+├── tasks/                  # microservice: core business logic
+├── notifications/           # microservice: email sending
+├── documents/                # microservice: task attachments
+├── messages/                # microservice: chat and internal notes
 └── proyecto frontend/       # Angular 20
 ```
 
@@ -234,21 +233,21 @@ PROYECTO SERVICIOS SECRETARIADO/
 
 ## Testing
 
-Cada microservicio de backend incluye:
-- **Tests unitarios** de la capa de servicio (JUnit 5 + Mockito).
-- **Tests de integración** de los controllers (`@SpringBootTest` +
-  `MockMvc`, con H2 en memoria y los clientes RestTemplate hacia otros
-  microservicios sustituidos por `@MockitoBean`).
-- `messages` incluye además **tests de arquitectura** (ArchUnit), que
-  verifican automáticamente que se respeta la estructura de paquetes
-  (controllers en `controller` y terminados en `Controller`, etc.).
+Each backend microservice includes:
+- **Unit tests** for the service layer (JUnit 5 + Mockito).
+- **Integration tests** for the controllers (`@SpringBootTest` +
+  `MockMvc`, with an in-memory H2 database and the RestTemplate clients
+  to other microservices replaced with `@MockitoBean`).
+- `messages` additionally includes **architecture tests** (ArchUnit),
+  which automatically verify that the package structure is respected
+  (controllers living in `controller` and ending in `Controller`, etc.).
 
 ```bash
-# En cualquier microservicio de backend:
+# In any backend microservice:
 mvn test
 ```
 
-El frontend incluye tests con Jasmine/Karma para servicios y componentes:
+The frontend includes Jasmine/Karma tests for services and components:
 ```bash
 cd "proyecto frontend"
 ng test
@@ -256,75 +255,76 @@ ng test
 
 ---
 
-## Bloques de desarrollo
+## Development blocks
 
-El proyecto se construyó de forma incremental, bloque a bloque, cada uno
-cerrado con sus propios tests y una guía documentada en Word:
+The project was built incrementally, block by block, each one closed
+with its own tests and a documented guide in Word:
 
-1. Autenticación, roles, tema claro/oscuro
-2. Categorías de encargos (CRUD)
-3. Creación y listado de tareas
-4. Categorías enriquecidas (icono, color, precio) y campos adicionales de tarea
-5. Notificaciones por email + presupuesto de la agencia
-6. Aceptación, rechazo y reenvío por el cliente
-7. Pago (simulado + TPV real BBVA/Redsys, entorno de pruebas)
-8. Documentos adjuntos
-9. Entrega y cierre de la tarea, con valoración
-10. Calendario tipo Google Calendar
-11. Mensajería interna (chat) y notas privadas del admin
-12. Panel de administración y métricas
-13. Seguridad avanzada (CORS configurable, rate limiting, credenciales fuera del código) y despliegue
+1. Authentication, roles, light/dark theme
+2. Task categories (CRUD)
+3. Task creation and listing
+4. Enriched categories (icon, color, price) and additional task fields
+5. Email notifications + agency budgeting
+6. Client acceptance, rejection, and resubmission
+7. Payment (simulated + real BBVA/Redsys TPV, sandbox environment)
+8. Document attachments
+9. Task delivery and closure, with rating
+10. Google Calendar-style calendar view
+11. Internal messaging (chat) and admin private notes
+12. Admin dashboard and metrics
+13. Advanced security (configurable CORS, rate limiting, credentials out of the codebase) and deployment
 
-Además, un rediseño visual completo del frontend ("sistema de diseño
-Expediente": cada tarea como un acordeón tipo carpeta de archivo, con
-paleta e identidad propias) aplicado transversalmente tras el Bloque 11.
-
----
-
-## Documentación adicional
-
-Cada bloque tiene su propio documento Word con la guía paso a paso, el
-código completo y las incidencias reales resueltas durante el desarrollo
-(útil como registro del proceso para la memoria del TFG). Los documentos
-más relevantes para entender el estado final del sistema:
-
-- Guía de cada bloque (`Bloque_1_SecreGest.docx` … `Bloque_13_SecreGest.docx`)
-- `Rediseno_Visual_SecreGest.docx` — el sistema de diseño del frontend
-- `TPV_Redsys_Camino_a_Produccion.docx` — qué haría falta para que el pago con TPV fuera 100% real
+In addition, a full visual redesign of the frontend (the "Dossier" design
+system: each task as a file-folder-style accordion, with its own palette
+and identity) applied across the board after Block 11.
 
 ---
 
-## Trabajo futuro
+## Additional documentation
 
-Líneas de continuidad razonables, no implementadas por quedar fuera del
-alcance de un TFG:
+Each block has its own Word document with the step-by-step guide, the
+full code, and the real issues resolved during development (useful as a
+process record for the TFG report). The documents most relevant to
+understanding the final state of the system:
 
-- **TPV en producción real**: contrato con BBVA, autenticación reforzada
-  (SCA/3D Secure, obligatoria por normativa PSD2), idempotencia de
-  notificaciones, devoluciones. Ver `TPV_Redsys_Camino_a_Produccion.docx`.
-- **Almacenamiento de documentos en un servicio dedicado** (MinIO/S3) en
-  vez de sistema de archivos local, para despliegues con más de una
-  instancia del microservicio `documents`.
-- **Rate limiting distribuido** (Redis) si el sistema llegase a
-  desplegarse con varias instancias de `users` en paralelo.
-- **Gestor de secretos** (Vault, AWS Secrets Manager) en vez de variables
-  de entorno simples, si el proyecto escalase a un entorno de producción
-  con varios responsables de despliegue.
-- **Notificaciones push / WebSockets** para el chat, en vez del *polling*
-  actual (refresco cada 5 segundos), si se buscase una experiencia
-  verdaderamente en tiempo real.
+- Guide for each block (`Bloque_1_SecreGest.docx` … `Bloque_13_SecreGest.docx`)
+- `Rediseno_Visual_SecreGest.docx` — the frontend design system
+- `TPV_Redsys_Camino_a_Produccion.docx` — what it would take to make the TPV payment fully real
 
 ---
 
-## Stack tecnológico
+## Future work
+
+Reasonable lines of continuation, not implemented as they fall outside
+the scope of a TFG:
+
+- **Real production TPV**: contract with BBVA, strong customer
+  authentication (SCA/3D Secure, mandatory under PSD2 regulation),
+  notification idempotency, refunds. See
+  `TPV_Redsys_Camino_a_Produccion.docx`.
+- **Document storage in a dedicated service** (MinIO/S3) instead of the
+  local filesystem, for deployments running more than one instance of
+  the `documents` microservice.
+- **Distributed rate limiting** (Redis) if the system were ever deployed
+  with multiple `users` instances in parallel.
+- **A secrets manager** (Vault, AWS Secrets Manager) instead of plain
+  environment variables, should the project scale to a production
+  environment with multiple people responsible for deployment.
+- **Push notifications / WebSockets** for the chat, instead of the
+  current *polling* approach (refreshing every 5 seconds), for a truly
+  real-time experience.
+
+---
+
+## Tech stack
 
 **Backend:** Spring Boot 4.1, Java 21, Spring Security (OAuth2 Resource
 Server + JWT), Spring Data JPA, PostgreSQL 16, H2 (tests), Maven,
-springdoc-openapi (Swagger), Thymeleaf (plantillas de email), ArchUnit.
+springdoc-openapi (Swagger), Thymeleaf (email templates), ArchUnit.
 
 **Frontend:** Angular 20 (standalone components), TypeScript, RxJS,
 Bootstrap 5, Angular Reactive Forms.
 
-**Infraestructura:** Docker, Docker Compose.
+**Infrastructure:** Docker, Docker Compose.
 
-**Integraciones externas:** Gmail SMTP, Redsys (TPV, entorno de pruebas).
+**External integrations:** Gmail SMTP, Redsys (TPV, sandbox environment).
